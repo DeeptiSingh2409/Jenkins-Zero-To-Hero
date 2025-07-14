@@ -18,7 +18,11 @@ pipeline {
     stage('Build and Test') {
       steps {
         dir('java-maven-sonar-argocd-helm-k8s/spring-boot-app') {
-          sh 'mvn clean package'
+          sh '''
+            echo "Force cleaning target directory"
+            rm -rf target
+            mvn clean package
+          '''
         }
       }
     }
