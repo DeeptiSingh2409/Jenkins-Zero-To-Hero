@@ -1,10 +1,5 @@
 pipeline {
-  agent {
-    docker {
-      image 'maven:3.9.6-eclipse-temurin-17'
-      args '--user root -v /var/run/docker.sock:/var/run/docker.sock'
-    }
-  }
+  agent any
 
   environment {
     SONAR_URL = "http://172.166.178.227:9000"
@@ -45,16 +40,13 @@ pipeline {
     stage('Build and Push Docker Image') {
       steps {
         dir('java-maven-sonar-argocd-helm-k8s/spring-boot-app') {
-          script {
-            // Login and push manually since Docker pipeline plugin doesn't work inside container
-            withCredentials([usernamePassword(credentialsId: 'docker-cred', usernameVariable: 'DOCKER_USERNAME', passwordVariable: 'DOCKER_PASSWORD')]) {
-              sh '''
-                docker build -t ${DOCKER_IMAGE} .
-                echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
-                docker push ${DOCKER_IMAGE}
-                docker logout
-              '''
-            }
+          withCredentials([usernamePassword(credentialsId: 'docker-cred', usernameVariable: 'DOCKER_USERNAME', passwordVariable: 'DOCKER_PASSWORD')]) {
+            sh '''
+              docker build -t ${DOCKER_IMAGE} .
+              echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
+              docker push ${DOCKER_IMAGE}
+              docker logout
+            '''
           }
         }
       }
